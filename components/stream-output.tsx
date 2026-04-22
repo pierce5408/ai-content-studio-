@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Copy, Download, RefreshCw } from "lucide-react";
 
@@ -11,6 +11,7 @@ interface StreamOutputProps {
 
 export function StreamOutput({ content, isStreaming, onReset }: StreamOutputProps) {
   const bottomRef = useRef<HTMLDivElement>(null);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     if (isStreaming) {
@@ -20,6 +21,8 @@ export function StreamOutput({ content, isStreaming, onReset }: StreamOutputProp
 
   const handleCopy = async () => {
     await navigator.clipboard.writeText(content);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   };
 
   const handleDownload = () => {
@@ -55,7 +58,7 @@ export function StreamOutput({ content, isStreaming, onReset }: StreamOutputProp
           <div className="flex items-center gap-2">
             <Button variant="ghost" size="sm" onClick={handleCopy} className="gap-1.5 h-8">
               <Copy className="w-3.5 h-3.5" />
-              複製
+              {copied ? "已複製！" : "複製"}
             </Button>
             <Button variant="ghost" size="sm" onClick={handleDownload} className="gap-1.5 h-8">
               <Download className="w-3.5 h-3.5" />

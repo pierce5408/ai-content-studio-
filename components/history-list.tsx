@@ -1,9 +1,10 @@
 "use client";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Copy, FileText, Mail, Share2, ChevronDown, ChevronUp } from "lucide-react";
+import { Copy, FileText, Mail, Share2, ChevronDown, ChevronUp, Trash2 } from "lucide-react";
 
 type ContentItem = {
   id: string;
@@ -20,13 +21,21 @@ const TYPE_CONFIG = {
   SOCIAL: { label: "社群", icon: Share2, variant: "outline" as const },
 };
 
-function HistoryItem({ item }: { item: ContentItem }) {
+function HistoryItem({ item, onDelete }: { item: ContentItem; onDelete: (id: string) => void }) {
   const [expanded, setExpanded] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const config = TYPE_CONFIG[item.type];
   const Icon = config.icon;
 
   const handleCopy = async () => {
     await navigator.clipboard.writeText(item.output);
+  };
+
+  const handleDelete = async () => {
+    if (!confirm("確定要刪除這筆紀錄嗎？")) return;
+    setDeleting(true);
+    await fetch(`/api/content/${item.id}`, { method: "DELETE" });
+    onDelete(item.id);
   };
 
   return (
@@ -52,6 +61,15 @@ function HistoryItem({ item }: { item: ContentItem }) {
             <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setExpanded(!expanded)}>
               {expanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
             </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7 text-red-400 hover:text-red-600 hover:bg-red-50"
+              onClick={handleDelete}
+              disabled={deleting}
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+            </Button>
           </div>
         </div>
       </CardHeader>
@@ -66,7 +84,14 @@ function HistoryItem({ item }: { item: ContentItem }) {
   );
 }
 
-export function HistoryList({ contents }: { contents: ContentItem[] }) {
+export function HistoryList({ contents: initial }: { contents: ContentItem[] }) {
+  const [contents, setContents] = useState(initial);
+  const router = useRouter();
+
+  const handleDelete = (id: string) => {
+    setContents((prev) => prev.filter((c) => c.id !== id));
+  };
+
   if (contents.length === 0) {
     return (
       <div className="text-center py-16 text-gray-400">
@@ -81,7 +106,7 @@ export function HistoryList({ contents }: { contents: ContentItem[] }) {
     <div className="space-y-3">
       <p className="text-sm text-gray-500">共 {contents.length} 筆記錄</p>
       {contents.map((item) => (
-        <HistoryItem key={item.id} item={item} />
+        <HistoryItem key={item.id} item={item} onDelete={handleDelete} />
       ))}
     </div>
   );

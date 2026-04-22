@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ContentTypeTabs, ContentType } from "@/components/content-type-tabs";
 import { StreamOutput } from "@/components/stream-output";
 import { Button } from "@/components/ui/button";
@@ -20,9 +20,13 @@ export function GenerateForm() {
   const [topic, setTopic] = useState("");
   const [tone, setTone] = useState("professional");
   const [language, setLanguage] = useState("zh-TW");
-  const [output, setOutput] = useState("");
+  const [output, setOutput] = useState(() => sessionStorage.getItem("generate-output") ?? "");
   const [isStreaming, setIsStreaming] = useState(false);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    sessionStorage.setItem("generate-output", output);
+  }, [output]);
 
   const handleGenerate = async () => {
     if (!topic.trim()) {
@@ -78,6 +82,7 @@ export function GenerateForm() {
     setOutput("");
     setError("");
     setTopic("");
+    sessionStorage.removeItem("generate-output");
   };
 
   return (
